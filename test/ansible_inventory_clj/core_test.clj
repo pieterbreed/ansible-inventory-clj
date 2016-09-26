@@ -12,6 +12,9 @@
     (is (s/valid? :ansible-inventory-clj.core/inventory
                   ansible-inventory-clj.core/empty-inventory))))
 
+
+;; ----------------------------------------
+
 (let [target ["username" "hostname" 22]]
   (tct/defspec add-target-merges-vars
     100
@@ -39,3 +42,34 @@
 
        ;; check that the result is the same
        (= exp tval)))))
+
+;; ----------------------------------------
+
+(tct/defspec add-group-merges-vars
+  100
+  (tcprop/for-all
+   [vars (tcgen/map tcgen/string-alphanumeric
+                    tcgen/string-alphanumeric)]
+   (let [;; expected value
+         ;; adds all of the "variables" at once
+         exp (-> empty-inventory
+                 (add-group "group-id" vars))
+
+         ;; test value
+         ;; add the variables one-at-a-time using the loop
+         tval (loop [keys (keys vars)
+                     inv (add-group empty-inventory "group-id" {})]
+                
+                (if (or (nil? keys)
+                        (empty? keys))
+                  inv
+                  (let [key (first keys)
+                        val (get vars key)]
+                    (recur (rest keys)
+                           (add-group inv "group-id"
+                                      {key val})))))]
+
+     ;; check that the result is the same
+     (= exp tval))))
+
+
