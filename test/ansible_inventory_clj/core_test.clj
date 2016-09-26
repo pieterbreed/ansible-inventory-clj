@@ -5,6 +5,7 @@
             [clojure.test.check.properties :as tcprop]
             [clojure.test.check.clojure-test :as tct]
             [clojure.spec :as s]
+            [clojure.spec.test :as stest]
             ))
 
 (deftest empty-inventory-test
@@ -73,3 +74,14 @@
      (= exp tval))))
 
 
+;; ----------------------------------------
+
+(deftest run-test-check-tests
+  (testing "That the auto-generated quick-check style tests pass."
+    (let [summary (stest/summarize-results
+                   (stest/check
+                    (stest/enumerate-namespace 'ansible-inventory-clj.core)
+                    {:clojure.spec.test.check/opts {:num-tests 50}}))]
+      (is (= (:total summary)
+             (:check-passed summary))
+          ))))
